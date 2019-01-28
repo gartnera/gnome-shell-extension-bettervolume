@@ -13,6 +13,7 @@ const Mainloop = imports.mainloop;
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const VolumeMenu = imports.ui.status.volume.VolumeMenu;
+const OsdWindow = imports.ui.osdWindow;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -29,6 +30,7 @@ let _onAggregateMenuEnterEventId;
 let _onAggregateMenuLeaveEventId;
 let _onVolumeIndicatorScrollEventId;
 let _onVolumeIndicatorClickEventId;
+let originalOsdSendFn;
 
 let popupTimeout = null;
 let availableMenus = [];
@@ -167,6 +169,9 @@ function enable() {
         _onAggregateMenuEnterEventId = aggregateMenu.menu.actor.connect('enter-event', _onAggregateMenuEnter);
         _onAggregateMenuLeaveEventId = aggregateMenu.menu.actor.connect('leave-event', _onAggregateMenuLeave);
         _onAggregateMenuClickEventId = aggregateMenu.actor.connect('button-press-event', _onAggregateMenuClick);
+
+        originalOsdShowFn = OsdWindow.OsdWindow.prototype.show;
+        OsdWindow.OsdWindow.prototype.show = _onVolumeIndicatorScroll;
     }
 }
 
@@ -186,5 +191,8 @@ function disable() {
 
     if (_onAggregateMenuClickEventId)
         aggregateMenu.actor.disconnect(_onAggregateMenuClickEventId);
+
+    if (originalOsdShowFn)
+        OsdWindow.OsdWindow.prototype.show = originalOsdShowFn;
 }
 
